@@ -11,7 +11,7 @@ def get_remote_file(url, req_json=False):
         req.add_header('Accept', 'application/vnd.github.v3+json')
 #   req.add_header('User-agent', 'Mozilla/5.0 (Windows NT 5.1; rv:27.0) Gecko/20100101 Firefox/27.0')
     bzresponse = urllib2.urlopen(req, timeout=240)
-    return {"headers":bzresponse.info(), "data": json.loads(bzresponse.read())}
+    return {"headers":bzresponse.info(), "data": json.loads(bzresponse.read().decode('utf8'))}
 
 def extract_data(json_data, results):
     for issue in json_data["data"]:
@@ -45,7 +45,7 @@ def main():
 
     # Link: <https://api.github.com/repositories/17914657/issues?per_page=10&page=2>; rel="next", <https://api.github.com/repositories/17914657/issues?per_page=10&page=23>; rel="last"
     # open('webcompatdata.csv', 'w').write("\n".join(results))
-    print("\n".join(results))
+    print("\n".join(results).encode('utf8'))
 
 
 if __name__ == "__main__":
