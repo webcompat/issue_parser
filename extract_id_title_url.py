@@ -70,7 +70,7 @@ def extract_links(link_hdr):
         all_links[the_type] = details[0].strip(' <>')
     return all_links
 
-def extract_data():
+def get_webcompat_data():
     url_base = "https://api.github.com/"
     links = {"next": url_base + 'repos/webcompat/web-bugs/issues?per_page=100&page=1'}
 
@@ -82,10 +82,10 @@ def extract_data():
         extract_data(response_data, results, bzresults)
         links = extract_links(response_data["headers"]["link"])
     # Link: <https://api.github.com/repositories/17914657/issues?per_page=10&page=2>; rel="next", <https://api.github.com/repositories/17914657/issues?per_page=10&page=23>; rel="last"
-    return [results, bzresults]
+    return [results, {"bugs":bzresults}]
 
 def main():
-    tmp = extract_data()
+    tmp = get_webcompat_data()
     results = tmp[0]
     bzresults = tmp[1]
     # open('webcompatdata.csv', 'w').write("\n".join(results))
@@ -95,10 +95,7 @@ def main():
     f.close()
     print("Wrote %d items to webcompatdata.csv " % len(results))
     f = open('webcompatdata-bzlike.json', 'w')
-    f.write('{"bugs":\n\t')
-    f.write("\n\t")
     f.write(json.dumps(bzresults, indent=4).encode('utf8'))
-    f.write("\n}\n")
     f.close()
     print("Wrote %d items to webcompatdata-bzlike.json" % len(bzresults))
 
