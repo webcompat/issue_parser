@@ -21,6 +21,8 @@ import socket
 import sys
 import urllib2
 
+# Config
+URL_REPO = "https://api.github.com/repos/webcompat/web-bugs"
 # Seconds. Loading searches can be slow
 socket.setdefaulttimeout(240)
 
@@ -116,10 +118,12 @@ def extract_next_link(link_hdr):
     return next_link
 
 
-def get_webcompat_data():
-    url_base = "https://api.github.com/repos/webcompat/web-bugs"
-    next_link = url_base + '/issues?per_page=100&page=1'
+def get_webcompat_data(url_repo):
+    '''Extract Issues data from github repo.
 
+    Start with the first page and follow hypermedia links to explore the rest.
+    '''
+    next_link = '%s/issues?per_page=100&page=1' % (url_repo)
     results = []
     bzresults = []
 
@@ -131,7 +135,7 @@ def get_webcompat_data():
 
 
 def main():
-    tmp = get_webcompat_data()
+    tmp = get_webcompat_data(URL_REPO)
     results = tmp[0]
     bzresults = tmp[1]
     with open('webcompatdata.csv', 'w') as f:
