@@ -131,13 +131,11 @@ def get_webcompat_data(url_repo):
         response_data = get_remote_file(next_link, True)
         extract_data(response_data, results, bzresults)
         next_link = extract_next_link(response_data["headers"]["link"])
-    return [results, {"bugs": bzresults}]
+    return results, {"bugs": bzresults}
 
 
 def main():
-    tmp = get_webcompat_data(URL_REPO)
-    results = tmp[0]
-    bzresults = tmp[1]
+    results, bzresults = get_webcompat_data(URL_REPO)
     with open('webcompatdata.csv', 'w') as f:
         f.write("\n".join(results).encode('utf8'))
         f.write('\n')
