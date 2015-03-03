@@ -38,6 +38,23 @@ def get_remote_file(url, req_json=False):
             "data": json.loads(bzresponse.read().decode('utf8'))}
 
 
+def extract_url(issue_body):
+    '''Extract the URL for an issue from WebCompat.
+
+    URL in webcompat.com bugs follow this pattern:
+    **URL**: https://example.com/foobar
+    '''
+    url_pattern = re.compile('\*\*URL\*\*\: (.*)\n')
+    url_match = re.search(url_pattern, issue_body)
+    if url_match:
+        url = url_match.group(1).strip()
+        if not url.startswith(('http://', 'https://')):
+            url = "http://%s" % url
+    else:
+        url = ""
+    return url
+
+
 def extract_data(json_data, results_csv, results_bzlike):
     translation_map = {
         "title": "summary",
@@ -54,17 +71,8 @@ def extract_data(json_data, results_csv, results_bzlike):
                          "needscontact", "needsdiagnosis"]
     # areWEcompatibleyet is only about mozilla bugs
     browser_os_labels = ["firefox", "mozilla", "android", "mobile"]
-    # URL in webcompat.com bugs follow this pattern:
-    # **URL**: https://example.com/foobar
-    url_pattern = re.compile('\*\*URL\*\*\: (.*)\n')
     for issue in json_data["data"]:
-        url_match = re.search(url_pattern, issue["body"])
-        if url_match:
-            url = url_match.group(1).strip()
-            if not url.startswith(('http://', 'https://')):
-                url = "http://%s" % url
-        else:
-            url = ""
+        url = extract_url(issue["body"])
         bug_id = issue["number"]
         link = 'https://webcompat.com/issues/%s' % bug_id
         if issue["title"] != "":
