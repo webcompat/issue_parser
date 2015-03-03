@@ -59,7 +59,7 @@ def extract_data(json_data, results_csv, results_bzlike):
         url_match = re.search(url_pattern, issue["body"])
         if url_match:
             url = url_match.group(1).strip()
-            if 'http://' not in url and 'https://' not in url:
+            if not url.startswith(('http://', 'https://')):
                 url = "http://%s" % url
         else:
             url = ""
