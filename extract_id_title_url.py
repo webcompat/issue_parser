@@ -96,29 +96,37 @@ def extract_data(json_data, results_csv, results_bzlike):
         results_bzlike.append(bzlike)
 
 
-def extract_links(link_hdr):
-    all_links = {"next": "", "last": "", "first": "", "prev": ""}
-    links = re.split(',', link_hdr)
+def extract_next_link(link_hdr):
+    '''Given a HTTP Link header, extract the "next" link.
+
+    Link header has the pattern:
+    '<https://example.com/foobar?page=2>; rel="next",
+     <https://example.com/foobar?page=100>; rel="last"'
+    We need:
+    https://example.com/foobar?page=2
+    When no more "next", we return an empty string.
+    '''
+    next_link = ''
+    links = link_hdr.split(',')
     for link in links:
-        details = re.split(';', link)
-        the_type = re.search(r'rel="(.*)"', details[1]).group(1)
-        all_links[the_type] = details[0].strip(' <>')
-    return all_links
+        link_only, rel = link.split(';')
+        if 'next' in rel:
+            next_link = link_only.strip(' <>')
+            break
+    return next_link
 
 
 def get_webcompat_data():
-    url_base = "https://api.github.com/"
-    links = {"next": url_base
-             + 'repos/webcompat/web-bugs/issues?per_page=100&page=1'}
+    url_base = "https://api.github.com/repos/webcompat/web-bugs"
+    next_link = url_base + '/issues?per_page=100&page=1'
 
     results = []
     bzresults = []
 
-    while links["next"]:
-        response_data = get_remote_file(links["next"], True)
+    while next_link:
+        response_data = get_remote_file(next_link, True)
         extract_data(response_data, results, bzresults)
-        links = extract_links(response_data["headers"]["link"])
-    # Link: <https://api.github.com/repositories/17914657/issues?per_page=10&page=2>; rel="next", <https://api.github.com/repositories/17914657/issues?per_page=10&page=23>; rel="last"
+        next_link = extract_next_link(response_data["headers"]["link"])
     return [results, {"bugs": bzresults}]
 
 
