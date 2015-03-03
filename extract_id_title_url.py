@@ -56,15 +56,6 @@ def extract_url(issue_body):
 
 
 def extract_data(json_data, results_csv, results_bzlike):
-    translation_map = {
-        "title": "summary",
-        "state": {"name": "status",
-                  "values": {"closed": "RESOLVED", "open": "OPEN"}},
-        "updated_at": "last_change_time",
-        "created_at": "creation_time",
-        "number": "id",
-        "closed_at": "cf_last_resolved",
-        }
     resolution_labels = ["duplicate", "invalid", "wontfix", "fixed",
                          "worksforme"]
     whiteboard_labels = ["needsinfo", "contactready", "sitewait",
@@ -72,26 +63,34 @@ def extract_data(json_data, results_csv, results_bzlike):
     # areWEcompatibleyet is only about mozilla bugs
     browser_os_labels = ["firefox", "mozilla", "android", "mobile"]
     for issue in json_data["data"]:
+        # Extracting data
         url = extract_url(issue["body"])
         bug_id = issue["number"]
         link = 'https://webcompat.com/issues/%s' % bug_id
         issue_title = issue["title"].encode('utf-8').strip()
-        if not issue_title:
+        creation_time = issue['created_at'].encode('utf-8')
+        last_change_time = issue['updated_at'].encode('utf-8')
+        issue_state = issue['state'].encode('utf-8')
+        cf_last_resolved = issue['closed_at']
+        if issue_state == 'open':
+            status = 'OPEN'
+        else:
+            status = 'RESOLVED'
+        # creating CSV file
+        if issue_title:
             results_csv.append("%i\t%s\t%s\t%s" % (
                 bug_id, issue_title, url, link))
+        # Creating dictionnary
         bzlike = {"id": bug_id,
-                  "summary": issue["title"].strip(),
+                  "summary": issue_title,
                   "url": url,
                   "whiteboard": "",
-                  "op_sys": ""}
-        for prop in translation_map:
-            if isinstance(translation_map[prop], basestring):
-                bzlike[translation_map[prop]] = issue[prop]
-            elif issue[prop] in translation_map[prop]['values']:
-                bzlike[translation_map[prop]['name']] = translation_map[prop]['values'][issue[prop]]
-            else:
-                print("Warning: not sure what to do with %s, value: %s"
-                      % (prop, issue[prop]))
+                  "op_sys": "",
+                  "creation_time": creation_time,
+                  "last_change_time": last_change_time,
+                  "status": status,
+                  "cf_last_resolved": cf_last_resolved
+                  }
         # GitHub labels require some special processing..
         for labelobj in issue['labels']:
             if labelobj['name'] in resolution_labels:
