@@ -60,8 +60,6 @@ def extract_data(json_data, results_csv, results_bzlike):
                          "worksforme"]
     whiteboard_labels = ["needsinfo", "contactready", "sitewait",
                          "needscontact", "needsdiagnosis"]
-    # areWEcompatibleyet is only about mozilla bugs
-    browser_os_labels = ["firefox", "mozilla", "android", "mobile"]
     for issue in json_data["data"]:
         # Extracting data
         url = extract_url(issue["body"])
@@ -76,6 +74,20 @@ def extract_data(json_data, results_csv, results_bzlike):
             status = 'OPEN'
         else:
             status = 'RESOLVED'
+        # Extracting the labels
+        labels_list = [label['name'] for label in issue['labels']]
+        # areWEcompatibleyet is only about mozilla bugs
+        if ('firefox' or 'mozilla') in labels_list:
+            if 'mobile' in labels_list:
+                op_sys = 'Gonk (Firefox OS)'
+            elif 'android' in labels_list:
+                op_sys = 'Android'
+            resolution_set = set(labels_list).intersection(resolution_labels)
+            if resolution_set:
+                resolution = resolution_set.pop().upper()
+            whiteboard = ''.join(['[%s] ' % label for label in labels_list
+                                  if label in whiteboard_labels])
+
         # creating CSV file
         if issue_title:
             results_csv.append("%i\t%s\t%s\t%s" % (
@@ -84,25 +96,14 @@ def extract_data(json_data, results_csv, results_bzlike):
         bzlike = {"id": bug_id,
                   "summary": issue_title,
                   "url": url,
-                  "whiteboard": "",
-                  "op_sys": "",
+                  "whiteboard": whiteboard or "",
+                  "op_sys": op_sys or "",
                   "creation_time": creation_time,
                   "last_change_time": last_change_time,
                   "status": status,
-                  "cf_last_resolved": cf_last_resolved
+                  "cf_last_resolved": cf_last_resolved or '',
+                  "resolution": resolution or '',
                   }
-        # GitHub labels require some special processing..
-        for labelobj in issue['labels']:
-            if labelobj['name'] in resolution_labels:
-                bzlike['resolution'] = labelobj['name'].upper()
-            elif (labelobj['name'] in whiteboard_labels
-                  or labelobj['name'] in browser_os_labels):
-                bzlike['whiteboard'] += "[%s] " % labelobj['name']
-        if ('[firefox]' in bzlike['whiteboard'] and '[mobile]' in bzlike['whiteboard']):
-            bzlike['op_sys'] = 'Gonk (Firefox OS)'
-        elif ('[firefox]' in bzlike['whiteboard']
-              and '[android]' in bzlike['whiteboard']):
-            bzlike['op_sys'] = 'Android'
         results_bzlike.append(bzlike)
 
 
