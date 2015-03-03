@@ -28,7 +28,7 @@ socket.setdefaulttimeout(240)
 def get_remote_file(url, req_json=False):
     print('Getting '+url)
     req = urllib2.Request(url)
-    req.add_header('User-agent', 'hallvors')
+    req.add_header('User-agent', 'AreWeCompatibleYetBot')
     if req_json:
         req.add_header('Accept', 'application/vnd.github.v3+json')
     bzresponse = urllib2.urlopen(req, timeout=240)
