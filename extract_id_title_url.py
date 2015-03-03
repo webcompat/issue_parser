@@ -1,11 +1,29 @@
-# dumps data from webcompat.com bug tracker
-# by default creates one CSV file (webcompatdata.csv)
-# and one JSON file (webcompatdata-bzlike.json) - this JSON file uses many of the field names
-# Bugzilla uses in its export, so the output from this script can be used where Bugzilla data
-# is expected
+#!/usr/bin/env python2.7
+# encoding: utf-8
+'''
+extract_id_title.py
 
-import json, urllib2, re, sys, socket, pdb
-socket.setdefaulttimeout(240) # Seconds. Loading searches can be slow
+Created by Hallvord R. M. Steen on 2014-10-25.
+Modified by Karl
+Mozilla Public License, version 2.0
+see LICENSE
+
+Dumps data from webcompat.com bug tracker
+by default creates one CSV file (webcompatdata.csv)
+and one JSON file (webcompatdata-bzlike.json)
+the JSON file uses many of the field names Bugzilla uses in its export,
+so the output from this script can be used where Bugzilla data is expected
+'''
+
+import json
+import re
+import socket
+import sys
+import urllib2
+
+# Seconds. Loading searches can be slow
+socket.setdefaulttimeout(240)
+
 
 def get_remote_file(url, req_json=False):
     print('Getting '+url)
@@ -13,24 +31,32 @@ def get_remote_file(url, req_json=False):
     req.add_header('User-agent', 'hallvors')
     if req_json:
         req.add_header('Accept', 'application/vnd.github.v3+json')
-#   req.add_header('User-agent', 'Mozilla/5.0 (Windows NT 5.1; rv:27.0) Gecko/20100101 Firefox/27.0')
     bzresponse = urllib2.urlopen(req, timeout=240)
-    return {"headers":bzresponse.info(), "data": json.loads(bzresponse.read().decode('utf8'))}
+    return {"headers": bzresponse.info(),
+            "data": json.loads(bzresponse.read().decode('utf8'))}
+
 
 def extract_data(json_data, results_csv, results_bzlike):
     translation_map = {
-    "title":"summary",
-    "state" : {"name":"status", "values": {"closed":"RESOLVED", "open": "OPEN"}},
-    "updated_at": "last_change_time",
-    "created_at": "creation_time",
-    "number": "id",
-    "closed_at": "cf_last_resolved",
-    }
-    resolution_labels = ["duplicate", "invalid", "wontfix", "fixed", "worksforme"]
-    whiteboard_labels = ["needsinfo", "contactready", "sitewait", "needscontact", "needsdiagnosis"]
-    browser_os_labels = ["firefox", "mozilla", "android", "mobile"] # areWEcompatibleyet doesn't care about non-moz, sorry - that's the purpose of webcompat.com
+        "title": "summary",
+        "state": {"name": "status",
+                  "values": {"closed": "RESOLVED", "open": "OPEN"}},
+        "updated_at": "last_change_time",
+        "created_at": "creation_time",
+        "number": "id",
+        "closed_at": "cf_last_resolved",
+        }
+    resolution_labels = ["duplicate", "invalid", "wontfix", "fixed",
+                         "worksforme"]
+    whiteboard_labels = ["needsinfo", "contactready", "sitewait",
+                         "needscontact", "needsdiagnosis"]
+    # areWEcompatibleyet is only about mozilla bugs
+    browser_os_labels = ["firefox", "mozilla", "android", "mobile"]
+    # URL in webcompat.com bugs follow this pattern:
+    # **URL**: https://example.com/foobar
+    url_pattern = re.compile('\*\*URL\*\*\: (.*)\n')
     for issue in json_data["data"]:
-        url_match = re.search(re.compile('\*\*URL\*\*\: (.*)\n'), issue["body"])
+        url_match = re.search(url_pattern, issue["body"])
         if url_match:
             url = url_match.group(1).strip()
             if 'http://' not in url and 'https://' not in url:
@@ -40,29 +66,38 @@ def extract_data(json_data, results_csv, results_bzlike):
         bug_id = issue["number"]
         link = 'https://webcompat.com/issues/%s' % bug_id
         if issue["title"] != "":
-            results_csv.append("%i\t%s\t%s\t%s" % (bug_id, issue["title"].strip(), url,link))
-        bzlike = {"id":bug_id, "summary":issue["title"].strip(), "url":url, "whiteboard":"", "op_sys":""}
+            results_csv.append("%i\t%s\t%s\t%s"
+                               % (bug_id, issue["title"].strip(), url, link))
+        bzlike = {"id": bug_id,
+                  "summary": issue["title"].strip(),
+                  "url": url,
+                  "whiteboard": "",
+                  "op_sys": ""}
         for prop in translation_map:
             if isinstance(translation_map[prop], basestring):
                 bzlike[translation_map[prop]] = issue[prop]
             elif issue[prop] in translation_map[prop]['values']:
                 bzlike[translation_map[prop]['name']] = translation_map[prop]['values'][issue[prop]]
             else:
-                print("Warning: not sure what to do with %s, value: %s" % (prop, issue[prop]))
+                print("Warning: not sure what to do with %s, value: %s"
+                      % (prop, issue[prop]))
         # GitHub labels require some special processing..
         for labelobj in issue['labels']:
             if labelobj['name'] in resolution_labels:
                 bzlike['resolution'] = labelobj['name'].upper()
-            elif labelobj['name'] in whiteboard_labels or labelobj['name'] in browser_os_labels:
+            elif (labelobj['name'] in whiteboard_labels
+                  or labelobj['name'] in browser_os_labels):
                 bzlike['whiteboard'] += "[%s] " % labelobj['name']
-        if '[firefox]' in bzlike['whiteboard'] and '[mobile]' in bzlike['whiteboard']:
+        if ('[firefox]' in bzlike['whiteboard'] and '[mobile]' in bzlike['whiteboard']):
             bzlike['op_sys'] = 'Gonk (Firefox OS)'
-        elif '[firefox]' in bzlike['whiteboard'] and '[android]' in bzlike['whiteboard']:
+        elif ('[firefox]' in bzlike['whiteboard']
+              and '[android]' in bzlike['whiteboard']):
             bzlike['op_sys'] = 'Android'
         results_bzlike.append(bzlike)
 
+
 def extract_links(link_hdr):
-    all_links = {"next":"", "last":"", "first":"", "prev":""}
+    all_links = {"next": "", "last": "", "first": "", "prev": ""}
     links = re.split(',', link_hdr)
     for link in links:
         details = re.split(';', link)
@@ -70,9 +105,11 @@ def extract_links(link_hdr):
         all_links[the_type] = details[0].strip(' <>')
     return all_links
 
+
 def get_webcompat_data():
     url_base = "https://api.github.com/"
-    links = {"next": url_base + 'repos/webcompat/web-bugs/issues?per_page=100&page=1'}
+    links = {"next": url_base
+             + 'repos/webcompat/web-bugs/issues?per_page=100&page=1'}
 
     results = []
     bzresults = []
@@ -82,7 +119,8 @@ def get_webcompat_data():
         extract_data(response_data, results, bzresults)
         links = extract_links(response_data["headers"]["link"])
     # Link: <https://api.github.com/repositories/17914657/issues?per_page=10&page=2>; rel="next", <https://api.github.com/repositories/17914657/issues?per_page=10&page=23>; rel="last"
-    return [results, {"bugs":bzresults}]
+    return [results, {"bugs": bzresults}]
+
 
 def main():
     tmp = get_webcompat_data()
