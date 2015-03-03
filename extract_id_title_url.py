@@ -52,7 +52,7 @@ def extract_url(issue_body):
             url = "http://%s" % url
     else:
         url = ""
-    return url
+    return url.encode('utf-8')
 
 
 def extract_data(json_data, results_csv, results_bzlike):
@@ -75,9 +75,10 @@ def extract_data(json_data, results_csv, results_bzlike):
         url = extract_url(issue["body"])
         bug_id = issue["number"]
         link = 'https://webcompat.com/issues/%s' % bug_id
-        if issue["title"] != "":
-            results_csv.append("%i\t%s\t%s\t%s"
-                               % (bug_id, issue["title"].strip(), url, link))
+        issue_title = issue["title"].encode('utf-8').strip()
+        if not issue_title:
+            results_csv.append("%i\t%s\t%s\t%s" % (
+                bug_id, issue_title, url, link))
         bzlike = {"id": bug_id,
                   "summary": issue["title"].strip(),
                   "url": url,
