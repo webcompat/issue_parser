@@ -126,15 +126,12 @@ def main():
     tmp = get_webcompat_data()
     results = tmp[0]
     bzresults = tmp[1]
-    # open('webcompatdata.csv', 'w').write("\n".join(results))
-    f = open('webcompatdata.csv', 'w')
-    f.write("\n".join(results).encode('utf8'))
-    f.write('\n')
-    f.close()
+    with open('webcompatdata.csv', 'w') as f:
+        f.write("\n".join(results).encode('utf8'))
+        f.write('\n')
     print("Wrote %d items to webcompatdata.csv " % len(results))
-    f = open('webcompatdata-bzlike.json', 'w')
-    f.write(json.dumps(bzresults, indent=4).encode('utf8'))
-    f.close()
+    with open('webcompatdata-bzlike.json', 'w') as f:
+        f.write(json.dumps(bzresults, indent=4).encode('utf8'))
     print("Wrote %d items to webcompatdata-bzlike.json" % len(bzresults))
 
 if __name__ == "__main__":
