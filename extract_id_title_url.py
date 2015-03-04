@@ -23,6 +23,7 @@ import urllib2
 
 # Config
 URL_REPO = "https://api.github.com/repos/webcompat/web-bugs"
+VERBOSE = True
 # Seconds. Loading searches can be slow
 socket.setdefaulttimeout(240)
 
@@ -66,6 +67,8 @@ def extract_data(json_data, results_csv, results_bzlike):
         bug_id = issue["number"]
         link = 'https://webcompat.com/issues/%s' % bug_id
         issue_title = issue["title"].encode('utf-8').strip()
+        if VERBOSE:
+            print('Issue %s: %s' % (bug_id, issue_title))
         creation_time = issue['created_at'].encode('utf-8')
         last_change_time = issue['updated_at'].encode('utf-8')
         issue_state = issue['state'].encode('utf-8')
@@ -78,33 +81,38 @@ def extract_data(json_data, results_csv, results_bzlike):
         labels_list = [label['name'] for label in issue['labels']]
         # areWEcompatibleyet is only about mozilla bugs
         if ('firefox' or 'mozilla') in labels_list:
+            # Defining the OS
             if 'mobile' in labels_list:
                 op_sys = 'Gonk (Firefox OS)'
             elif 'android' in labels_list:
                 op_sys = 'Android'
+            else:
+                op_sys = ''
+            # Did the bug had a resolution?
+            resolution = ''
             resolution_set = set(labels_list).intersection(resolution_labels)
             if resolution_set:
                 resolution = resolution_set.pop().upper()
+            # Gathering Whiteboard keys
             whiteboard = ''.join(['[%s] ' % label for label in labels_list
                                   if label in whiteboard_labels])
-
-        # creating CSV file
-        if issue_title:
-            results_csv.append("%i\t%s\t%s\t%s" % (
-                bug_id, issue_title, url, link))
-        # Creating dictionnary
-        bzlike = {"id": bug_id,
-                  "summary": issue_title,
-                  "url": url,
-                  "whiteboard": whiteboard or "",
-                  "op_sys": op_sys or "",
-                  "creation_time": creation_time,
-                  "last_change_time": last_change_time,
-                  "status": status,
-                  "cf_last_resolved": cf_last_resolved or '',
-                  "resolution": resolution or '',
-                  }
-        results_bzlike.append(bzlike)
+            # creating CSV file
+            if issue_title:
+                results_csv.append("%i\t%s\t%s\t%s" % (
+                    bug_id, issue_title, url, link))
+            # Creating dictionnary
+            bzlike = {"id": bug_id,
+                      "summary": issue_title,
+                      "url": url,
+                      "whiteboard": whiteboard,
+                      "op_sys": op_sys,
+                      "creation_time": creation_time,
+                      "last_change_time": last_change_time,
+                      "status": status,
+                      "cf_last_resolved": cf_last_resolved,
+                      "resolution": resolution,
+                      }
+            results_bzlike.append(bzlike)
 
 
 def extract_next_link(link_hdr):
@@ -151,7 +159,7 @@ def main():
     print("Wrote %d items to webcompatdata.csv " % len(results))
     with open('webcompatdata-bzlike.json', 'w') as f:
         f.write(json.dumps(bzresults, indent=4).encode('utf8'))
-    print("Wrote %d items to webcompatdata-bzlike.json" % len(bzresults))
+    print("Wrote %d items to webcompatdata-bzlike.json" % len(bzresults['bugs']))
 
 if __name__ == "__main__":
     sys.exit(main())
