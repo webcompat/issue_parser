@@ -25,6 +25,7 @@ def extract_data(json_data, results_csv, results_bzlike):
     "created_at": "creation_time",
     "number": "id",
     "closed_at": "cf_last_resolved",
+    "body":"body" # This isn't in the bugzilla format, included for DB export purposes
     }
     resolution_labels = ["duplicate", "invalid", "wontfix", "fixed", "worksforme"]
     whiteboard_labels = ["needsinfo", "contactready", "sitewait", "needscontact", "needsdiagnosis"]

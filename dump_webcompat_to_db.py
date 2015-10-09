@@ -24,12 +24,14 @@ class Issue(Base):
 
     id = Column(String(128), unique=True, primary_key=True)
     summary = Column(String(256))
-    url = Column(String(256))
+    url = Column(String(1024))
+    body = Column(String(2048))
 
-    def __init__(self, id, summary, url):
+    def __init__(self, id, summary, url, body):
         self.id = id
         self.summary = summary
         self.url = url
+        self.body = body
 
 Base.metadata.create_all(bind=engine)
 
@@ -44,7 +46,7 @@ def main():
 
     # stuff data into database..
     for bug in data['bugs']:
-        db_session.add(Issue(bug['id'], bug['summary'], bug['url']))
+        db_session.add(Issue(bug['id'], bug['summary'], bug['url'], bug['body']))
     db_session.commit()
 
 
