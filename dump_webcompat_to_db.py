@@ -9,12 +9,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from extract_id_title_url import get_webcompat_data
-from webcompat import engine
+from db import engine, db_session
 import json
 
-db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=engine))
 
 Base = declarative_base()
 Base.query = db_session.query_property()
