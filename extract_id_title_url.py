@@ -81,11 +81,11 @@ def extract_data(json_data, results_csv, results_bzlike):
         # Extracting the labels
         labels_list = [label['name'] for label in issue['labels']]
         # areWEcompatibleyet is only about mozilla bugs
-        if ('firefox' or 'mozilla') in labels_list:
+        if any([('firefox' or 'mozilla') in label for label in labels_list]):
             # Defining the OS
-            if 'mobile' in labels_list:
+            if any(['mobile' in label for label in labels_list]):
                 op_sys = 'Gonk (Firefox OS)'
-            elif 'android' in labels_list:
+            elif any(['android' in label for label in labels_list]):
                 op_sys = 'Android'
             else:
                 op_sys = ''
