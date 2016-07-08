@@ -15,8 +15,8 @@ Before starting contributing on this code,
     Now when you type `git remote -v`, you should see:
 
         → git remote -v
-        origin  git@github.com:karlcow/issue_parser.git (fetch)
-        origin  git@github.com:karlcow/issue_parser.git (push)
+        origin  git@github.com:USERNAME/issue_parser.git (fetch)
+        origin  git@github.com:USERNAME/issue_parser.git (push)
         upstream    https://github.com/webcompat/issue_parser.git (fetch)
         upstream    https://github.com/webcompat/issue_parser.git (push)
 
