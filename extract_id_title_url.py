@@ -29,7 +29,7 @@ socket.setdefaulttimeout(240)
 
 
 def get_remote_file(url, req_json=False):
-    print('Getting '+url)
+    print('Getting ' + url)
     req = urllib2.Request(url)
     req.add_header('User-agent', 'AreWeCompatibleYetBot')
     if req_json:
@@ -161,7 +161,9 @@ def main():
     print("Wrote %d items to webcompatdata.csv " % len(results))
     with open('webcompatdata-bzlike.json', 'w') as f:
         f.write(json.dumps(bzresults, indent=4).encode('utf8'))
-    print("Wrote %d items to webcompatdata-bzlike.json" % len(bzresults['bugs']))
+    print("Wrote %d items to webcompatdata-bzlike.json".format(
+        len(bzresults['bugs'])))
+
 
 if __name__ == "__main__":
     sys.exit(main())
