@@ -1,2 +1,7 @@
+env/
+git_modules/
+.DS_Store
+*.pyc
+*.db
 webcompatdata-bzlike.json
 webcompatdata.csv
