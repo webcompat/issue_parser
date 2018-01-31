@@ -19,7 +19,10 @@ import json
 import re
 import socket
 import sys
-import urllib2
+try:
+    from urllib.request import urlopen, Request
+except ImportError:
+    from urllib2 import urlopen, Request
 
 # Config
 URL_REPO = "https://api.github.com/repos/webcompat/web-bugs"
@@ -30,11 +33,11 @@ socket.setdefaulttimeout(240)
 
 def get_remote_file(url, req_json=False):
     print('Getting ' + url)
-    req = urllib2.Request(url)
+    req = Request(url)
     req.add_header('User-agent', 'AreWeCompatibleYetBot')
     if req_json:
         req.add_header('Accept', 'application/vnd.github.v3+json')
-    bzresponse = urllib2.urlopen(req, timeout=240)
+    bzresponse = urlopen(req, timeout=240)
     return {"headers": bzresponse.info(),
             "data": json.loads(bzresponse.read().decode('utf8'))}
 
