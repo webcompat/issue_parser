@@ -15,6 +15,7 @@ the JSON file uses many of the field names Bugzilla uses in its export,
 so the output from this script can be used where Bugzilla data is expected
 '''
 
+import csv
 import json
 import re
 import socket
@@ -56,7 +57,7 @@ def extract_url(issue_body):
             url = "http://%s" % url
     else:
         url = ""
-    return url.encode('utf-8')
+    return url
 
 
 def extract_data(json_data, results_csv, results_bzlike):
@@ -70,12 +71,12 @@ def extract_data(json_data, results_csv, results_bzlike):
         url = extract_url(body)
         bug_id = issue["number"]
         link = 'https://webcompat.com/issues/%s' % bug_id
-        issue_title = issue["title"].encode('utf-8').strip()
+        issue_title = issue["title"].strip()
         if VERBOSE:
             print('Issue %s: %s' % (bug_id, issue_title))
-        creation_time = issue['created_at'].encode('utf-8')
-        last_change_time = issue['updated_at'].encode('utf-8')
-        issue_state = issue['state'].encode('utf-8')
+        creation_time = issue['created_at']
+        last_change_time = issue['updated_at']
+        issue_state = issue['state']
         cf_last_resolved = issue['closed_at']
         if issue_state == 'open':
             status = 'OPEN'
@@ -160,12 +161,12 @@ def main():
     results, bzresults = get_webcompat_data(URL_REPO)
     # webcompatdata.csv
     with open('webcompatdata.csv', 'w') as f:
-        f.write("\n".join(results).encode('utf8'))
+        f.write("\n".join(results))
         f.write('\n')
     print("Wrote {} items to webcompatdata.csv ".format(len(results)))
     # webcompatdata-bzlike.json
     with open('webcompatdata-bzlike.json', 'w') as f:
-        f.write(json.dumps(bzresults, indent=4).encode('utf8'))
+        f.write(json.dumps(bzresults, indent=4))
     print("Wrote {} items to webcompatdata-bzlike.json".format(
         len(bzresults['bugs'])))
 
