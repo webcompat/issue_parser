@@ -19,7 +19,8 @@ import json
 import re
 import socket
 import sys
-from urllib.request import urlopen, Request
+from urllib.request import Request
+from urllib.request import urlopen
 
 
 # Config
