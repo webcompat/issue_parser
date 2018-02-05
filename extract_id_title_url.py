@@ -19,7 +19,9 @@ import json
 import re
 import socket
 import sys
-import urllib2
+from urllib.request import Request
+from urllib.request import urlopen
+
 
 # Config
 URL_REPO = "https://api.github.com/repos/webcompat/web-bugs"
@@ -30,11 +32,11 @@ socket.setdefaulttimeout(240)
 
 def get_remote_file(url, req_json=False):
     print('Getting ' + url)
-    req = urllib2.Request(url)
+    req = Request(url)
     req.add_header('User-agent', 'AreWeCompatibleYetBot')
     if req_json:
         req.add_header('Accept', 'application/vnd.github.v3+json')
-    bzresponse = urllib2.urlopen(req, timeout=240)
+    bzresponse = urlopen(req, timeout=240)
     return {"headers": bzresponse.info(),
             "data": json.loads(bzresponse.read().decode('utf8'))}
 
@@ -156,13 +158,13 @@ def get_webcompat_data(url_repo=URL_REPO):
 def main():
     results, bzresults = get_webcompat_data(URL_REPO)
     # webcompatdata.csv
-    with open('webcompatdata.csv', 'w') as f:
+    with open('webcompatdata.csv', 'wb') as f:
         f.write("\n".join(results).encode('utf8'))
         f.write('\n')
     print("Wrote {} items to webcompatdata.csv ".format(len(results)))
     # webcompatdata-bzlike.json
     with open('webcompatdata-bzlike.json', 'w') as f:
-        f.write(json.dumps(bzresults, indent=4).encode('utf8'))
+        f.write(json.dumps(bzresults, indent=4))
     print("Wrote {} items to webcompatdata-bzlike.json".format(
         len(bzresults['bugs'])))
 
