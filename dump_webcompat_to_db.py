@@ -4,16 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
+import os
+
 from sqlalchemy import Column
-from sqlalchemy import String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import String
+
 from extract_id_title_url import get_webcompat_data
-from db import db_session
-import json
 
-DB_PATH = 'sqlite:////tmp/test.db'
 
+engine = create_engine('sqlite:///' + os.path.join(os.getcwd(), 'webcompatdata.db'))
+db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 Base = declarative_base()
 Base.query = db_session.query_property()
 
@@ -32,11 +37,11 @@ class Issue(Base):
         self.url = url
         self.body = body
 
+Issue.metadata.create_all(bind=engine)
+
 
 def main():
     '''Core program.'''
-    engine = create_engine(DB_PATH, convert_unicode=True)
-    Base.metadata.create_all(bind=engine)
     live = False
     if live:
         data = get_webcompat_data()[1]

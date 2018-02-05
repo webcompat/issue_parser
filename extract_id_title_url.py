@@ -20,10 +20,9 @@ import json
 import re
 import socket
 import sys
-try:
-    from urllib.request import urlopen, Request
-except ImportError:
-    from urllib2 import urlopen, Request
+from urllib.request import Request
+from urllib.request import urlopen
+
 
 # Config
 URL_REPO = "https://api.github.com/repos/webcompat/web-bugs"
@@ -162,7 +161,6 @@ def main():
     # webcompatdata.csv
     with open('webcompatdata.csv', 'w') as f:
         f.write("\n".join(results))
-        f.write('\n')
     print("Wrote {} items to webcompatdata.csv ".format(len(results)))
     # webcompatdata-bzlike.json
     with open('webcompatdata-bzlike.json', 'w') as f:
